@@ -1,0 +1,11 @@
+{
+  "name": "eatmi-api",
+  "main": "server.js",
+  "dependencies": {
+    "body-parser": "~1.0.1",
+    "bookshelf": "^0.10.3",
+    "express": "~4.0.0",
+    "knex": "^0.12.8",
+    "pg": "~6.1.5"
+  }
+}
