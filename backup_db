@@ -1,4 +1,5 @@
 #!/bin/bash
 sudo pg_dump -Uphil -hlocalhost eatme -p5432 | gzip > eatme.dmp.gz
-add .
-git push -u origin  eatme
+git add .
+git commit
+git push -u origin  eatme_dev
