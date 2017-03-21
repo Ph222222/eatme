@@ -1,0 +1,85 @@
+CREATE TABLE public.countries (
+  id INTEGER NOT NULL,
+  name VARCHAR(100),
+  codelong VARCHAR(5),
+  codeshort VARCHAR(3),
+  phonecode VARCHAR(20),
+  default_language_id INTEGER DEFAULT 100,
+  CONSTRAINT countries_pkey PRIMARY KEY(id)
+) 
+WITH (oids = false);
+
+CREATE TABLE public.cities (
+  id INTEGER DEFAULT nextval('guid_seq'::regclass) NOT NULL,
+  state_id INTEGER,
+  country_id INTEGER,
+  name VARCHAR(50),
+  CONSTRAINT cities_pkey PRIMARY KEY(id),
+  CONSTRAINT cities_country_fkey FOREIGN KEY (country_id)
+    REFERENCES public.countries(id)
+    MATCH FULL
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+    NOT DEFERRABLE
+) 
+WITH (oids = false);
+
+CREATE TABLE public.addresses (
+  id INTEGER DEFAULT nextval('guid_seq'::regclass) NOT NULL,
+  city_id INTEGER,
+  street_address_1 VARCHAR(200),
+  street_address_2 VARCHAR(200),
+  zip VARCHAR(15),
+  CONSTRAINT addresses_pkey PRIMARY KEY(id),
+  CONSTRAINT addresses_cities_pk FOREIGN KEY (city_id)
+    REFERENCES public.cities(id)
+    MATCH FULL
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION
+    NOT DEFERRABLE
+) 
+WITH (oids = false);
+
+CREATE TABLE public.locations (
+  id INTEGER DEFAULT nextval('guid_seq'::regclass) NOT NULL,
+  name VARCHAR(50),
+  created TIMESTAMP WITHOUT TIME ZONE DEFAULT now_utc() NOT NULL,
+  modified TIMESTAMP WITHOUT TIME ZONE DEFAULT now_utc(),
+  organisation_id INTEGER NOT NULL,
+  address_id INTEGER,
+  CONSTRAINT location_name_key UNIQUE(name),
+  CONSTRAINT location_pkey PRIMARY KEY(id),
+  CONSTRAINT locations_addresses_fk FOREIGN KEY (address_id)
+    REFERENCES public.addresses(id)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION
+    NOT DEFERRABLE,
+  CONSTRAINT locations_fk FOREIGN KEY (organisation_id)
+    REFERENCES public.organisations(id)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+    NOT DEFERRABLE
+) 
+WITH (oids = false);
+
+COMMENT ON COLUMN public.locations.id
+IS 'location Id, PK';
+
+COMMENT ON COLUMN public.locations.name
+IS 'location Name';
+
+COMMENT ON COLUMN public.locations.organisation_id
+IS 'FK to Organisations';
+
+COMMENT ON COLUMN public.locations.address_id
+IS 'Id of location address';
+
+CREATE INDEX locations_idx1 ON public.locations
+  USING btree (organisation_id);
+
+CREATE TRIGGER audit_locations_tr
+  AFTER INSERT OR UPDATE OR DELETE 
+  ON public.locations
+  
+FOR EACH STATEMENT 
+  EXECUTE PROCEDURE audit.if_modified_func();
