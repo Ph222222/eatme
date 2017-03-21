@@ -42,10 +42,39 @@ var port = process.env.PORT || 8082;        // set our port
 var router = express.Router();              // get an instance of the express Router
 
 // test route to make sure everything is working (accessed at GET http://localhost:8080/api)
-router.get('/', function(req, res) {
-    res.json({ message: 'hooray! welcome to our api!' });   
-});
+router.route('/cuisines/:id')
+  // fetch user
+  .get(function (req, res) {
+    Cuisines.forge({id: req.params.id})
+    .fetch()
+    .then(function (user) {
+      if (!user) {
+        res.status(404).json({error: true, data: {}});
+      }
+      else {
+        res.json({error: false, data: user.toJSON()});
+      }
+    })
+    .catch(function (err) {
+      res.status(500).json({error: true, data: {message: err.message}});
+    });
+  })
 
+router.route('/cuisines')
+
+    .post(function (req, res) {
+      console.log (req.body.name );
+      Cuisines.forge({
+        name: req.body.name 
+      })
+      .save()
+      .then(function (user) {
+        res.json({error: false, data: {id: user.get('id')}});
+      })
+      .catch(function (err) {
+        res.status(500).json({error: true, data: {message: err.message}});
+      }); 
+    });
 // more routes for our API will happen here
 
 // REGISTER OUR ROUTES -------------------------------
